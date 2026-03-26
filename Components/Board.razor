@@ -1,5 +1,6 @@
-﻿@inject GameState State
-@using System.Drawing
+﻿
+﻿@using System.Drawing
+@inject GameState State
 
 <HeadContent>
     <style>
@@ -20,43 +21,75 @@
 </nav>
 
 <article>
-    @winnerMessage  <button style="@ResetStyle" @onclick="ResetGame">Reset the game</button>
+    @winnerMessage
+    <button style="@ResetStyle" @onclick="ResetGame">Reset the game</button>
     <br />
     <span class="alert-danger">@errorMessage</span>
     <span class="alert-info">@CurrentTurn</span>
 </article>
 
-<div>
-    <div class="board">
-    @for (var i = 0; i < 42; i++)
-    {
-        <span class="container">
-            <span></span>
-        </span>
-    }
+<div class="game-layout">
+    <div class="board-area">
+        <div class="board">
+            @for (var i = 0; i < 42; i++)
+            {
+                <span class="container">
+                    <span></span>
+                </span>
+            }
+        </div>
+
+        @for (var i = 0; i < 42; i++)
+        {
+            <span class="@pieces[i]"></span>
+        }
     </div>
-    @for (var i = 0; i < 42; i++)
-    {
-       <span class="@pieces[i]"></span>
-    }
+
+    <div class="history-area">
+        <h4>Move History</h4>
+        <ul>
+            @foreach (var move in moves.AsEnumerable().Reverse())
+            {
+                <li>@move</li>
+            }
+        </ul>
+    </div>
+
 </div>
 
 @code {
+    [Parameter]
+    public Color BoardColor { get; set; } = ColorTranslator.FromHtml("yellow");
+    [Parameter]
+    public Color Player1Color { get; set; } = ColorTranslator.FromHtml("red");
+    [Parameter]
+    public Color Player2Color { get; set; } = ColorTranslator.FromHtml("blue");
+
     private string[] pieces = new string[42];
+
+
     private string winnerMessage = string.Empty;
     private string errorMessage = string.Empty;
-
+    private List<string> moves = new();
     private string CurrentTurn => (winnerMessage == string.Empty) ? $"Player {State.PlayerTurn}'s Turn" : "";
     private string ResetStyle => (winnerMessage == string.Empty) ? "display: none;" : "";
+
+    protected override void OnInitialized()
+    {
+        State.ResetBoard();
+    }
+
     private void PlayPiece(byte col)
     {
         errorMessage = string.Empty;
+
         try
         {
             var player = State.PlayerTurn;
             var turn = State.CurrentTurn;
             var landingRow = State.PlayPiece(col);
             pieces[turn] = $"player{player} col{col} drop{landingRow}";
+            moves.Add($"Move {turn + 1}: Player {player} → Column {col + 1}");
         }
         catch (ArgumentException ex)
         {
@@ -72,24 +105,12 @@
         };
     }
 
-    void ResetGame()
+    private void ResetGame()
     {
         State.ResetBoard();
         winnerMessage = string.Empty;
         errorMessage = string.Empty;
         pieces = new string[42];
-    }
-
-    [Parameter]
-    public Color BoardColor { get; set; } = ColorTranslator.FromHtml("yellow");
-
-    [Parameter]
-    public Color Player1Color { get; set; } = ColorTranslator.FromHtml("red");
-
-    [Parameter]
-    public Color Player2Color { get; set; } = ColorTranslator.FromHtml("blue");
-    protected override void OnInitialized()
-    {
-        State.ResetBoard();
+        moves.Clear();
     }
 }
