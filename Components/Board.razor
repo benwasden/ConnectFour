@@ -89,7 +89,7 @@
             var turn = State.CurrentTurn;
             var landingRow = State.PlayPiece(col);
             pieces[turn] = $"player{player} col{col} drop{landingRow}";
-            moves.Add($"Move {turn + 1}: Player {player} → Column {col + 1}");
+            moves.Add($"{turn + 1}: Player {player} - Column {col + 1}");
         }
         catch (ArgumentException ex)
         {
